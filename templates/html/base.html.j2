@@ -1,7 +1,10 @@
 <html>
     <head>
     <meta charset="UTF-8">
-        <title>Flask Sklep</title>
+        <title>{{ title }}</title>
+        {% if head_values is defined %}
+        {{ head_values }}
+        {% endif %}
     </head>
     <body>
         {% block content %}{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "html/base.html.j2" %}
+
+{% block content %}
+    <h1>Zaloguj</h1>
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.username.label }}<br>
+            {{ form.username(size=32) }}
+        </p>
+        <p>
+            {{ form.voivodeship.label }}<br>
+            {{ form.voivodeship(size=32) }}
+        </p>
+        <p>
+            {{ form.city.label }}<br>
+            {{ form.city(size=32) }}
+        </p>
+        <p>
+            {{ form.street.label }}<br>
+            {{ form.street(size=32) }}
+        </p>
+        <p>
+            {{ form.building_number.label }}<br>
+            {{ form.building_number(size=32) }}
+        </p>
+        <p>
+            {{ form.house_number.label }}<br>
+            {{ form.house_number(size=32) }}
+        </p>
+
+        <p>{{ form.submit() }}</p>
+    </form>
+{% endblock %}

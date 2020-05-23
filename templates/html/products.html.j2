@@ -1,0 +1,22 @@
+{% extends "html/base.html.j2" %}
+
+{% block content %}
+<table>
+<tr>
+<th>Nr</th>
+<th>Nazwa</th>
+<th>Cena netto</th>
+<th>Vat</th>
+</td>
+
+    {% for row in products %}
+         <tr>
+         {% for cell in row %}
+             <td>
+             {{ cell }}
+             </td>
+         {% endfor %}
+         </tr>
+    {% endfor %}
+</table>
+{% endblock %}
