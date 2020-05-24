@@ -1,3 +1,4 @@
+import json
 import sqlite3
 
 from flask import (
@@ -116,11 +117,13 @@ table, th, td {
   border: 1px solid black;
 }
     </style>"""
+    header = ["Nr", "Nazwa", "Cena netto", "Vat"]
     return render_template(
-        "html/products.html.j2",
+        "html/table.html.j2",
         title="Produkty",
-        products=products_list,
+        data=products_list,
         head_values=css,
+        header=header,
     )
 
 
@@ -131,18 +134,59 @@ table, th, td {
 #         db.close()
 @app.route("/seller/add_product", methods=["GET", "POST"])
 def add_product():
-    form = ProductForm()
-    if request.method == "POST":
-        form.validate_on_submit()
+    if session["user_type"] != "Klient":
+        form = ProductForm()
+        if request.method == "POST":
+            form.validate_on_submit()
+            cur = get_db().cursor()
+            cur.execute(
+                "insert into Produkt values (null, ?, ?, ?)",
+                (form.name.data, form.net_price.data, form.vat.data),
+            )
+            get_db().commit()
+            return redirect(url_for("products"))
+
+        return render_template("html/add_product.html.j2", form=form)
+    return redirect(url_for("index"))
+
+
+@app.route("/manager/users")
+def users():
+    if session["user_type"] != "Klient":
         cur = get_db().cursor()
         cur.execute(
-            "insert into Produkt values (null, ?, ?, ?)",
-            (form.name.data, form.net_price.data, form.vat.data)
+            "select login, haslo, typ, imie, nazwisko, wojewodztwo, miasto, ulica,"
+            " nr_budynku, nr_lokalu from Uzytkownik "
+            "inner join Osoba on Uzytkownik.osoba = Osoba.id"
+            " inner join Adres on Osoba.adres = Adres.id "
         )
-        get_db().commit()
-        return redirect(url_for("products"))
+        resp = cur.fetchall()
+        css = """
+            <style>
+        table {
+          border-collapse: collapse;
+        }
 
-    return render_template("html/add_product.html.j2", form=form)
+        table, th, td {
+          border: 1px solid black;
+        }
+            </style>"""
+        header = [
+            "Login",
+            "Hasło",
+            "Typ",
+            "Imie",
+            "Nazwisko",
+            "Województwo",
+            "Miasto",
+            "Ulica",
+            "Nr Budynku",
+            "Nr lokalu",
+        ]
+        return render_template(
+            "html/table.html.j2", data=resp, head_values=css, header=header
+        )
+    return redirect(url_for("index"))
 
 
 @app.route("/register", methods=["GET", "POST"])
