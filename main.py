@@ -12,7 +12,7 @@ from flask import (
 )
 
 
-from app.forms import LoginForm, RegisterForm, RegisterClientForm
+from app.forms import LoginForm, RegisterForm, RegisterClientForm, ProductForm
 
 DB_NAME = "Database.db"
 
@@ -76,9 +76,8 @@ def login():
     register_form = RegisterClientForm()
 
     if request.method == "POST":
-        print("dupa")
-        print()
-        if "Zaloguj"  == request.form.get("submit"):
+
+        if "Zaloguj" == request.form.get("submit"):
             cur = get_db().cursor()
             cur.execute(
                 f"Select haslo, typ from Uzytkownik where login = '{login_form.username.data}'"
@@ -94,8 +93,7 @@ def login():
             session["register_type"] = "Klient"
             return redirect(url_for("register"))
         else:
-            return redirect(url_for("/"))
-
+            return redirect(url_for("login"))
 
     return render_template(
         "html/login.html.j2", title="Zaloguj", form=login_form, form2=register_form
@@ -131,14 +129,54 @@ table, th, td {
 #     db = getattr(_app_ctx_stack, '_database', None)
 #     if db is not None:
 #         db.close()
+@app.route("/seller/add_product", methods=["GET", "POST"])
+def add_product():
+    form = ProductForm()
+    if request.method == "POST":
+        form.validate_on_submit()
+        cur = get_db().cursor()
+        cur.execute(
+            "insert into Produkt values (null, ?, ?, ?)",
+            (form.name.data, form.net_price.data, form.vat.data)
+        )
+        get_db().commit()
+        return redirect(url_for("products"))
+
+    return render_template("html/add_product.html.j2", form=form)
 
 
-@app.route("/register")
+@app.route("/register", methods=["GET", "POST"])
 def register():
     form = RegisterForm()
-    return render_template(
-        "html/register.html.j2", title="Zarejestruj", form=form
-    )
+    if request.method == "POST":
+        form.validate_on_submit()
+        cur = get_db().cursor()
+        cur.execute(
+            "insert into Adres values (null, ?, ?, ?, ?, ?)",
+            (
+                form.house_number.data,
+                form.building_number.data,
+                form.street.data,
+                form.city.data,
+                form.voivodeship.data,
+            ),
+        )
+        get_db().commit()
+        addres_id = cur.lastrowid
+        cur.execute(
+            "insert into Osoba values (null, ?, ?, ?)",
+            (form.name.data, form.last_name.data, addres_id),
+        )
+        get_db().commit()
+        user_id = cur.lastrowid
+        cur.execute(
+            "insert into Uzytkownik values (null, ?, ?, ?, ?)",
+            (form.username.data, form.password.data, session["register_type"], user_id),
+        )
+        get_db().commit()
+        return redirect(url_for("login"))
+
+    return render_template("html/register.html.j2", title="Zarejestruj", form=form)
 
 
 @app.route("/index.html")

@@ -1,4 +1,11 @@
 {% extends "html/base.html.j2" %}
 {% block content %}
 <a href="/client/products"> Produkty</a></br>
+{% if user_type == "Sprzedawca" or user_type == "Manager" %}
+<a href="/seller/add_product"> Dodaj Produkt</a></br>
+{% endif %}
+{% if user_type == "Manager" %}
+
+{% endif %}
+
 {% endblock %}
