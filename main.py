@@ -153,6 +153,9 @@ def add_product():
     return redirect(url_for("index"))
 
 
+
+
+
 @app.route("/manager/users")
 def users():
     if session["user_type"] != "Klient":
