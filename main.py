@@ -9,7 +9,6 @@ from flask import (
     url_for,
     session,
     request,
-    Response,
 )
 
 
@@ -58,7 +57,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 con = sqlite3.connect(DB_NAME, check_same_thread=False)
 create_database(con)
-#insert_init_values(con)
+# insert_init_values(con)
 
 app.config.from_object(Config)
 secret_key = "cos bezpiecznego"
@@ -224,18 +223,42 @@ def register():
             (form.username.data, form.password.data, session["register_type"], user_id),
         )
         get_db().commit()
-        return redirect(url_for("login"))
+        if session["register_type"] == "Klient":
+            return redirect(url_for("login"))
+        else:
+            return redirect(url_for("index"))
 
     return render_template("html/register.html.j2", title="Zarejestruj", form=form)
 
 
-@app.route("/index.html")
+@app.route("/index.html", methods=["GET", "POST"])
 def index():
-    if "user_type" not in session.keys():
-        return redirect(url_for("bad_login"))
-    return render_template(
-        "html/index.html.j2", title="Główna", user_type=session["user_type"]
-    )
+    if request.method =="GET":
+        if "user_type" not in session.keys():
+            return redirect(url_for("bad_login"))
+        css = """<style type="text/css">
+    form input[type="submit"]{
+    
+        background: none;
+        border: none;
+        color: blue;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+    </style>"""
+        return render_template(
+            "html/index.html.j2",
+            title="Główna",
+            user_type=session["user_type"],
+            head_values=css,
+        )
+    else:
+        if request.form.get("submit") == "Zarejestruj Sprzedawce":
+            session["register_type"] = "Sprzedawca"
+            return redirect(url_for("register"))
+        elif request.form.get("submit") == "Zarejestruj Managera":
+            session["register_type"] = "Manager"
+            return redirect(url_for("register"))
 
 
 if __name__ == "__main__":
