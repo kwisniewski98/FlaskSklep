@@ -6,6 +6,12 @@
 {% endif %}
 {% if user_type == "Manager" %}
 <a href="/manager/users"> Wyświetl użytkowników</a></br>
+    <form action="" method="post" name="sellerregister" novalidate >
+        <input type="submit" value="Zarejestruj Sprzedawce" name="submit">
+    </form>
+    <form action="" method="post" name="managerregister" novalidate >
+        <input type="submit" value="Zarejestruj Managera" name="submit">
+    </form>
 
 {% endif %}
 
