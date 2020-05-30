@@ -18,5 +18,23 @@
         </p>
 
         <p>{{ form.submit() }}</p>
+        <table>
+        <tr>
+        <th></th>
+        <th>Imie</th>
+        <th>Nazwisko</th>
+        </tr>
+        {% for person in persons %}
+        <tr>
+            <td style="width:50px;padding:5px;text-align:center;">
+                <input type="radio" name="przycisk" value="{{ person[0] }}">
+            </td>
+            <td>{{ person[1] }}</td>
+            <td>{{ person[2] }}</td>
+
+        </tr>
+        {% endfor %}
+        </table>
     </form>
+
 {% endblock %}

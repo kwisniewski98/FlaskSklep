@@ -1,4 +1,3 @@
-import json
 import sqlite3
 
 from flask import (
@@ -10,6 +9,7 @@ from flask import (
     url_for,
     session,
     request,
+    Response,
 )
 
 
@@ -34,8 +34,8 @@ def insert_init_values(con):
         "insert into Osoba values(null, 'Andrzej', 'Kowalski', 1)",
         "insert into Osoba values(null, 'Ania', 'Kowalska', 1)",
         "insert into Osoba values(null, 'Grzegorz', 'Nowak', 2)",
-        "insert into Produkt values(null, 'Intel core i7-9700K', 1600, 0.23)",
-        "insert into Produkt values(null, 'Intel core i7-9900K', 2200, 0.23)",
+        "insert into Produkt values(null, 'Intel core i7-9700K', 1600, 0.23, 1)",
+        "insert into Produkt values(null, 'Intel core i7-9900K', 2200, 0.23, 2)",
         "insert into Uzytkownik values (null, 'temp', 'temp123', 'Manager', 1)",
         "insert into Uzytkownik values (null, 'Klient', 'temp123', 'Klient', 1)",
         "insert into Uzytkownik values (null, 'S', 'temp123', 'Sprzedawca', 1)",
@@ -58,7 +58,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 con = sqlite3.connect(DB_NAME, check_same_thread=False)
 create_database(con)
-# insert_init_values(con)
+#insert_init_values(con)
 
 app.config.from_object(Config)
 secret_key = "cos bezpiecznego"
@@ -117,7 +117,7 @@ table, th, td {
   border: 1px solid black;
 }
     </style>"""
-    header = ["Nr", "Nazwa", "Cena netto", "Vat"]
+    header = ["Nr", "Nazwa", "Cena netto", "Vat", "Opiekun id"]
     return render_template(
         "html/table.html.j2",
         title="Produkty",
@@ -127,11 +127,6 @@ table, th, td {
     )
 
 
-# @app.teardown_appcontext
-# def close_connection(exception):
-#     db = getattr(_app_ctx_stack, '_database', None)
-#     if db is not None:
-#         db.close()
 @app.route("/seller/add_product", methods=["GET", "POST"])
 def add_product():
     if session["user_type"] != "Klient":
@@ -140,13 +135,21 @@ def add_product():
             form.validate_on_submit()
             cur = get_db().cursor()
             cur.execute(
-                "insert into Produkt values (null, ?, ?, ?)",
-                (form.name.data, form.net_price.data, form.vat.data),
+                "insert into Produkt values (null, ?, ?, ?, ?)",
+                (
+                    form.name.data,
+                    form.net_price.data,
+                    form.vat.data,
+                    request.form.getlist("przycisk")[0],
+                ),
             )
             get_db().commit()
             return redirect(url_for("products"))
-
-        return render_template("html/add_product.html.j2", form=form)
+        cur = get_db().cursor()
+        cur.execute("Select id, imie, nazwisko from Osoba")
+        return render_template(
+            "html/add_product.html.j2", form=form, persons=cur.fetchall()
+        )
     return redirect(url_for("index"))
 
 
