@@ -1,0 +1,50 @@
+{% extends "html/base.html.j2" %}
+
+{% block content %}
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <ul class=flashes>
+        <li>{{ messages[0] }}</li>
+        </ul>
+    {% endif %}
+    {% endwith %}
+        </form>
+
+        <form action="" method="post" novalidate>
+        {{form.hidden_tag() }}
+
+        <table border="1" cellpadding="0" cellspacing="0">
+        <tr style="width:50px;padding:5px;text-align:center;">
+        <th></th>
+        <th>Nazwa</th>
+        <th>Cena netto</th>
+        <th>Vat</th>
+        <th>Opiekun</th>
+        </tr>
+    {% for i in persons %}
+        <tr>
+        <td style="width:50px;padding:5px;text-align:center;">
+            <input type="radio" name="przycisk" value="{{ i[0] }}">
+        </td> 
+        <td style="width:50px;padding:5px;text-align:center;">
+            {{ i[1] }}
+        </td> 
+        <td style="width:200px;padding:5px;">
+            {{ i[2] }} 
+        </td>
+        <td style="width:200px;padding:5px;">
+            {{ i[3] }} 
+        </td>
+        <td style="width:200px;padding:5px;">
+            {{ i[4] }} 
+        </td>      
+        <tr>
+    {% endfor %}   
+    </table>
+
+        <p>{{ form.submit() }}</p>
+        <p>{{ form.submitUpdate() }}</p>
+    </form>
+
+{% endblock %}

@@ -12,7 +12,8 @@ from flask import (
 )
 
 
-from app.forms import LoginForm, RegisterForm, RegisterClientForm, ProductForm
+from app.forms import LoginForm, RegisterForm, RegisterClientForm, ProductForm, DeleteUserForm, DeletePersonForm, DeleteAdresForm, DeleteProduktForm, UpdateProduktForm, UpdateAdresForm, UpdateOsobaForm
+from flask import flash
 
 DB_NAME = "Database.db"
 
@@ -125,21 +126,253 @@ table, th, td {
         header=header,
     )
 
+@app.route("/seller/del_user", methods=["GET", "POST"])
+def del_user():
+
+    if session["user_type"] != "Klient":
+        form = ProductForm()
+        form2 = DeleteUserForm()
+
+        if request.method == "POST":
+            cur = get_db().cursor()
+
+            if "Usuń Uzytkownika" == request.form.get("submit"):
+                cur.execute('SELECT * FROM Uzytkownik WHERE id=?', (request.form.getlist("przycisk")[0]))
+                user = cur.fetchall()[0]
+                print((str(user)))
+                cur.execute('SELECT * FROM Osoba WHERE id=?', (str(user[0])) )
+                person = cur.fetchall()
+                cur.execute('SELECT * FROM Adres WHERE id=?', (str(person[0][3])) )
+                adress = cur.fetchall()
+                if(len(person) == 0):
+                    if(len(adress) == 0):
+                        cur.execute('DELETE FROM Uzytkownik WHERE id=?', (str(user[0])) )
+                        con.commit()
+                        flash('Usunieto osobe')
+                    else:
+                        flash('Musisz najpierw usunac adres', 'error')
+                else:
+                    flash('Musisz najpierw usunac osobe', 'error')
+            
+        cur = get_db().cursor()
+        cur.execute("Select Osoba.id, imie, nazwisko, login, typ, nr_lokalu, nr_budynku, ulica, miasto, wojewodztwo from Osoba inner join Uzytkownik on Osoba.id = Uzytkownik.id inner join Adres on Adres.id = Osoba.id" )
+        return render_template(
+            "html/del_user.html.j2", form=form, persons=cur.fetchall(), form2 = form2
+        )
+    return redirect(url_for("index"))
+
+@app.route("/seller/del_osoba", methods=["GET", "POST"])
+def del_osoba():
+
+    if session["user_type"] != "Klient":
+        form = DeletePersonForm()
+
+        if request.method == "POST":
+            cur = get_db().cursor()
+
+            if "Usuń Osobe" == request.form.get("submit"):
+                cur.execute('SELECT * FROM Osoba WHERE id=?', (request.form.getlist("przycisk")[0]) )
+                person = cur.fetchall()
+                cur.execute('SELECT * FROM Adres WHERE id=?', (str(person[0][3])) )
+                adress = cur.fetchall()
+                if(len(adress) == 0):
+                    cur.execute('DELETE FROM Osoba WHERE id=?', (request.form.getlist("przycisk")[0]) )
+                    con.commit()
+                    flash('Usunieto osobe')
+                else:
+                    flash('Musisz najpierw usunac adres', 'error')
+
+            if "Update Osoba" == request.form.get("submitUpdate"):
+                print("!!")
+                cur = get_db().cursor()
+                session["id"] = (request.form.getlist("przycisk"))
+                return redirect(url_for("update_osoba"))
+
+
+        cur = get_db().cursor()
+        cur.execute("Select Osoba.id, imie, nazwisko, login, typ, nr_lokalu, nr_budynku, ulica, miasto, wojewodztwo from Osoba inner join Uzytkownik on Osoba.id = Uzytkownik.id inner join Adres on Adres.id = Osoba.id" )
+        
+        return render_template(
+            "html/del_osoba.html.j2", form=form, persons=cur.fetchall()
+        )
+    return redirect(url_for("index"))
+
+@app.route("/seller/update_osoba", methods=["GET", "POST"])
+def update_osoba():
+
+    if session["user_type"] != "Klient":
+        form = UpdateOsobaForm()
+
+        if request.method == "POST":
+            cur = get_db().cursor()
+            if "Update Adres" == request.form.get("submit"):
+                con = get_db()
+                cur = get_db().cursor()
+                ids = str(session['id'])
+                #con.execute('update Adres set nazwa=? where id=?',( form.name.data , ids ) )
+                #con.execute('update Adres set cena_netto=? where id=?',(form.net_price.data, ids) )
+                #con.execute('update Adres set vat=? where id=?',(form.vat.data, ids ) )
+                #con.commit()
+                return redirect(url_for("index"))
+
+        cur = get_db().cursor()
+        cur.execute("Select * from Osoba where id=?",(session["id"]))
+        produkty = cur.fetchall()
+        form.name.data = produkty[0][1]
+        form.surname.data = produkty[0][2]
+        
+        return render_template(
+            "html/update_osoba.html.j2", form=form, persons= produkty
+        )
+        
+    return redirect(url_for("index"))
+
+
+@app.route("/seller/del_adres", methods=["GET", "POST"])
+def del_adres():
+
+    if session["user_type"] != "Klient":
+        form = DeleteAdresForm()
+
+        if request.method == "POST":
+            cur = get_db().cursor()
+
+            if "Usuń Adres" == request.form.get("submit"):
+                cur.execute('SELECT * FROM Adres WHERE id=?', (request.form.getlist("przycisk")[0]) )
+                adress = cur.fetchall()
+                if(len(adress) == 1):
+                    cur.execute('DELETE FROM Adres WHERE id=?', (request.form.getlist("przycisk")[0]) )
+                    con.commit()
+                    flash('Usunieto Adres')
+                else:
+                    flash('Nieznany blad', 'error')
+
+            if "Update Adres" == request.form.get("submitUpdate"):
+                cur = get_db().cursor()
+                session["id"] = (request.form.getlist("przycisk"))
+                return redirect(url_for("update_adres"))
+
+        cur = get_db().cursor()
+        cur.execute("Select id, nr_lokalu, nr_budynku, ulica, miasto, wojewodztwo from Adres")
+        return render_template(
+            "html/del_adres.html.j2", form=form, persons=cur.fetchall()
+        )
+    return redirect(url_for("index"))
+
+@app.route("/seller/update_adres", methods=["GET", "POST"])
+def update_adres():
+
+    if session["user_type"] != "Klient":
+        form = UpdateAdresForm()
+
+        if request.method == "POST":
+            cur = get_db().cursor()
+            if "Update Adres" == request.form.get("submit"):
+                con = get_db()
+                cur = get_db().cursor()
+                ids = str(session['id'])
+                #con.execute('update Adres set nazwa=? where id=?',( form.name.data , ids ) )
+                #con.execute('update Adres set cena_netto=? where id=?',(form.net_price.data, ids) )
+                #con.execute('update Adres set vat=? where id=?',(form.vat.data, ids ) )
+                #con.commit()
+                return redirect(url_for("index"))
+
+        cur = get_db().cursor()
+        cur.execute("Select * from Adres where id=?",(session["id"]))
+        produkty = cur.fetchall()
+        form.building_number.data = produkty[0][1]
+        form.house_number.data = produkty[0][2]
+        form.street.data = produkty[0][3]
+        form.city.data = produkty[0][4]
+        form.voivodeship.data = produkty[0][5]
+        
+        return render_template(
+            "html/update_adres.html.j2", form=form, persons= produkty
+        )
+        
+    return redirect(url_for("index"))
+
+@app.route("/seller/del_produkt", methods=["GET", "POST"])
+def del_produkt():
+
+    if session["user_type"] != "Klient":
+        form = DeleteProduktForm()
+
+        if request.method == "POST":
+            cur = get_db().cursor()
+
+            if "Usuń Produkt" == request.form.get("submit"):
+                cur.execute('SELECT * FROM Produkt WHERE id=?', (request.form.getlist("przycisk")[0]) )
+                produkt = cur.fetchall()
+                if(len(produkt) == 1):
+                    cur.execute('DELETE FROM Produkt WHERE id=?', (request.form.getlist("przycisk")[0]) )
+                    con.commit()
+                    flash('Usunieto Produkt')
+                else:
+                    flash('Nieznany blad', 'error')
+
+            if "Update Produkt" == request.form.get("submitUpdate"):
+                cur = get_db().cursor()
+                session["id"] = (request.form.getlist("przycisk"))
+                return redirect(url_for("update_product"))
+
+        cur = get_db().cursor()
+        cur.execute("Select id, nazwa, cena_netto, vat, opiekun from Produkt")
+        return render_template(
+            "html/del_produkt.html.j2", form=form, persons=cur.fetchall()
+        )
+    return redirect(url_for("index"))
+
+
+@app.route("/seller/update_product", methods=["GET", "POST"])
+def update_product():
+
+    if session["user_type"] != "Klient":
+        form = UpdateProduktForm()
+
+        if request.method == "POST":
+            cur = get_db().cursor()
+            if "Update Produkt" == request.form.get("submit"):
+                con = get_db()
+                cur = get_db().cursor()
+                ids = str(session['id'])
+                con.execute('update Produkt set nazwa=? where id=?',( form.name.data , ids ) )
+                con.execute('update Produkt set cena_netto=? where id=?',(form.net_price.data, ids) )
+                con.execute('update Produkt set vat=? where id=?',(form.vat.data, ids ) )
+                con.commit()
+                return redirect(url_for("index"))
+
+        cur = get_db().cursor()
+        cur.execute("Select id, nazwa, cena_netto, vat, opiekun from Produkt where id=?",(session["id"]))
+        produkty = cur.fetchall()
+        form.name.data = produkty[0][1]
+        form.net_price.data = produkty[0][2]
+        form.vat.data = produkty[0][3]
+        
+        return render_template(
+            "html/update_product.html.j2", form=form, persons= produkty
+        )
+        
+    return redirect(url_for("index"))
+
+
 
 @app.route("/seller/add_product", methods=["GET", "POST"])
 def add_product():
+    
     if session["user_type"] != "Klient":
         form = ProductForm()
+        form2 = DeleteUserForm()
         if request.method == "POST":
-            form.validate_on_submit()
             cur = get_db().cursor()
+            form.validate_on_submit()
             cur.execute(
                 "insert into Produkt values (null, ?, ?, ?, ?)",
                 (
                     form.name.data,
                     form.net_price.data,
                     form.vat.data,
-                    request.form.getlist("przycisk")[0],
+                    request.getlist("przycisk")[0],
                 ),
             )
             get_db().commit()
@@ -147,7 +380,7 @@ def add_product():
         cur = get_db().cursor()
         cur.execute("Select id, imie, nazwisko from Osoba")
         return render_template(
-            "html/add_product.html.j2", form=form, persons=cur.fetchall()
+            "html/add_product.html.j2", form=form, persons=cur.fetchall(), form2 = form2
         )
     return redirect(url_for("index"))
 
@@ -260,6 +493,19 @@ def index():
             session["register_type"] = "Manager"
             return redirect(url_for("register"))
 
+        elif request.form.get("submit") == "Usuń Użytkownika":
+            session["register_type"] = "Sprzedawca"
+            return redirect(url_for("del_user"))
 
+        elif request.form.get("submit") == "Usuń Osobe":
+            session["register_type"] = "Sprzedawca"
+            return redirect(url_for("del_osoba"))
+            
+        elif request.form.get("submit") == "Usuń Adres":
+            session["register_type"] = "Sprzedawca"
+            return redirect(url_for("del_adres"))
+        elif request.form.get("submit") == "Usuń Produkt":
+            session["register_type"] = "Sprzedawca"
+            return redirect(url_for("del_produkt"))
 if __name__ == "__main__":
     app.run()
