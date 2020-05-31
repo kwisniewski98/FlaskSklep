@@ -12,7 +12,7 @@ from flask import (
 )
 
 
-from app.forms import LoginForm, RegisterForm, RegisterClientForm, ProductForm, DeleteUserForm, DeletePersonForm, DeleteAdresForm, DeleteProduktForm, UpdateProduktForm, UpdateAdresForm, UpdateOsobaForm
+from app.forms import LoginForm, RegisterForm, RegisterClientForm, ProductForm, DeleteUserForm, DeletePersonForm, DeleteAdresForm, DeleteProduktForm, UpdateProduktForm, UpdateAdresForm, UpdateOsobaForm, UpdateUserForm
 from flask import flash
 
 DB_NAME = "Database.db"
@@ -130,8 +130,7 @@ table, th, td {
 def del_user():
 
     if session["user_type"] != "Klient":
-        form = ProductForm()
-        form2 = DeleteUserForm()
+        form = DeleteUserForm()
 
         if request.method == "POST":
             cur = get_db().cursor()
@@ -154,12 +153,50 @@ def del_user():
                 else:
                     flash('Musisz najpierw usunac osobe', 'error')
             
+            if "Update Uzytkownika" == request.form.get("submitUpdate"):         
+                cur = get_db().cursor()
+                session["id"] = (request.form.getlist("przycisk"))
+                print(session["id"])
+                return redirect(url_for("update_user"))
+
         cur = get_db().cursor()
         cur.execute("Select Osoba.id, imie, nazwisko, login, typ, nr_lokalu, nr_budynku, ulica, miasto, wojewodztwo from Osoba inner join Uzytkownik on Osoba.id = Uzytkownik.id inner join Adres on Adres.id = Osoba.id" )
         return render_template(
-            "html/del_user.html.j2", form=form, persons=cur.fetchall(), form2 = form2
+            "html/del_user.html.j2", form=form, persons=cur.fetchall(),
         )
     return redirect(url_for("index"))
+
+@app.route("/seller/update_user", methods=["GET", "POST"])
+def update_user():
+    if session["user_type"] != "Klient":
+        form = UpdateUserForm()
+        if request.method == "POST":
+            cur = get_db().cursor()
+            if "Update Uzytkownika" == request.form.get("submit"):
+                con = get_db()
+                cur = get_db().cursor()
+                ids = str(session['id'][0])
+                con.execute('update Uzytkownik set login=? where id=?',( form.username.data , ids ) )
+                if(len(form.password.data) != 0):
+                    con.execute('update Uzytkownik set haslo=? where id=?',(form.password.data, ids) )
+                con.execute('update Uzytkownik set typ=? where id=?',(form.typ.data, ids) )
+                con.commit()
+                return redirect(url_for("index"))
+                
+        cur = get_db().cursor()
+        cur.execute("Select id, login, haslo, typ from Uzytkownik where id=?",(session["id"]))
+        produkty = cur.fetchall()
+        form.username.data = produkty[0][1]
+        form.typ.data = produkty[0][3]
+        
+        return render_template(
+            "html/update_user.html.j2", form=form, persons= produkty
+        )
+        
+    return redirect(url_for("index"))
+
+
+
 
 @app.route("/seller/del_osoba", methods=["GET", "POST"])
 def del_osoba():
@@ -182,10 +219,10 @@ def del_osoba():
                 else:
                     flash('Musisz najpierw usunac adres', 'error')
 
-            if "Update Osoba" == request.form.get("submitUpdate"):
-                print("!!")
+            if "Update Osobe" == request.form.get("submitUpdate"):         
                 cur = get_db().cursor()
                 session["id"] = (request.form.getlist("przycisk"))
+                print(session["id"])
                 return redirect(url_for("update_osoba"))
 
 
@@ -199,33 +236,31 @@ def del_osoba():
 
 @app.route("/seller/update_osoba", methods=["GET", "POST"])
 def update_osoba():
-
     if session["user_type"] != "Klient":
         form = UpdateOsobaForm()
-
         if request.method == "POST":
             cur = get_db().cursor()
-            if "Update Adres" == request.form.get("submit"):
+            if "Update Osoba" == request.form.get("submit"):
                 con = get_db()
                 cur = get_db().cursor()
-                ids = str(session['id'])
-                #con.execute('update Adres set nazwa=? where id=?',( form.name.data , ids ) )
-                #con.execute('update Adres set cena_netto=? where id=?',(form.net_price.data, ids) )
-                #con.execute('update Adres set vat=? where id=?',(form.vat.data, ids ) )
-                #con.commit()
+                ids = str(session['id'][0])
+                con.execute('update Osoba set imie=? where id=?',( form.name.data , ids ) )
+                con.execute('update Osoba set nazwisko=? where id=?',(form.last_name.data, ids) )
+                con.commit()
                 return redirect(url_for("index"))
 
         cur = get_db().cursor()
-        cur.execute("Select * from Osoba where id=?",(session["id"]))
+        cur.execute("Select id, imie, nazwisko from Osoba where id=?",(session["id"]))
         produkty = cur.fetchall()
         form.name.data = produkty[0][1]
-        form.surname.data = produkty[0][2]
+        form.last_name.data = produkty[0][2]
         
         return render_template(
             "html/update_osoba.html.j2", form=form, persons= produkty
         )
         
     return redirect(url_for("index"))
+
 
 
 @app.route("/seller/del_adres", methods=["GET", "POST"])
@@ -270,11 +305,13 @@ def update_adres():
             if "Update Adres" == request.form.get("submit"):
                 con = get_db()
                 cur = get_db().cursor()
-                ids = str(session['id'])
-                #con.execute('update Adres set nazwa=? where id=?',( form.name.data , ids ) )
-                #con.execute('update Adres set cena_netto=? where id=?',(form.net_price.data, ids) )
-                #con.execute('update Adres set vat=? where id=?',(form.vat.data, ids ) )
-                #con.commit()
+                ids = str(session['id'][0])
+                con.execute('update Adres set nr_lokalu=? where id=?',( form.building_number.data , ids ) )
+                con.execute('update Adres set nr_budynku=? where id=?',(form.house_number.data, ids) )
+                con.execute('update Adres set ulica=? where id=?',(form.street.data, ids ) )
+                con.execute('update Adres set miasto=? where id=?',(form.city.data, ids ) )
+                con.execute('update Adres set wojewodztwo=? where id=?',(form.voivodeship.data, ids ) )
+                con.commit()
                 return redirect(url_for("index"))
 
         cur = get_db().cursor()
@@ -335,7 +372,7 @@ def update_product():
             if "Update Produkt" == request.form.get("submit"):
                 con = get_db()
                 cur = get_db().cursor()
-                ids = str(session['id'])
+                ids = str(session['id'][0])
                 con.execute('update Produkt set nazwa=? where id=?',( form.name.data , ids ) )
                 con.execute('update Produkt set cena_netto=? where id=?',(form.net_price.data, ids) )
                 con.execute('update Produkt set vat=? where id=?',(form.vat.data, ids ) )

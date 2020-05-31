@@ -43,6 +43,7 @@ class RegisterClientForm(FlaskForm):
 
 class DeleteUserForm(FlaskForm):
     submit = SubmitField("Usuń Uzytkownika")
+    submitUpdate = SubmitField("Update Uzytkownika")
 
 class DeletePersonForm(FlaskForm):
     submit = SubmitField("Usuń Osobe")
@@ -74,4 +75,11 @@ class UpdateAdresForm(FlaskForm):
 class UpdateOsobaForm(FlaskForm):
     name = StringField("Imie", validators=[DataRequired()])
     last_name = StringField("Nazwisko", validators=[DataRequired()])
-    submit = SubmitField("Update ")
+    submit = SubmitField("Update Osoba")
+
+
+class UpdateUserForm(FlaskForm):
+    username = StringField("Login", validators=[DataRequired()])
+    password = PasswordField("Haslo", validators=[DataRequired()])
+    typ = StringField("Login", validators=[DataRequired()])
+    submit = SubmitField("Update Uzytkownika")

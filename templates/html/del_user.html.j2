@@ -12,7 +12,7 @@
         </form>
 
         <form action="" method="post" novalidate>
-        {{form2.hidden_tag() }}
+        {{form.hidden_tag() }}
 
         <table border="1" cellpadding="0" cellspacing="0">
         <tr style="width:50px;padding:5px;text-align:center;">
@@ -64,7 +64,8 @@
     {% endfor %}   
     </table>
 
-        <p>{{ form2.submit() }}</p>
+        <p>{{ form.submit() }}</p>
+        <p>{{ form.submitUpdate() }}</p>
     </form>
 
 {% endblock %}
