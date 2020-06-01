@@ -136,29 +136,35 @@ def del_user():
             cur = get_db().cursor()
 
             if "Usuń Uzytkownika" == request.form.get("submit"):
-                cur.execute('SELECT * FROM Uzytkownik WHERE id=?', (request.form.getlist("przycisk")[0]))
-                user = cur.fetchall()[0]
-                print((str(user)))
-                cur.execute('SELECT * FROM Osoba WHERE id=?', (str(user[0])) )
-                person = cur.fetchall()
-                cur.execute('SELECT * FROM Adres WHERE id=?', (str(person[0][3])) )
-                adress = cur.fetchall()
-                if(len(person) == 0):
-                    if(len(adress) == 0):
-                        cur.execute('DELETE FROM Uzytkownik WHERE id=?', (str(user[0])) )
-                        con.commit()
-                        flash('Usunieto osobe')
+                try:
+                    request.form.getlist("przycisk")[0]
+                    cur.execute('SELECT * FROM Uzytkownik WHERE id=?', (request.form.getlist("przycisk")[0]))
+                    user = cur.fetchall()[0]
+                    print((str(user)))
+                    cur.execute('SELECT * FROM Osoba WHERE id=?', (str(user[0])) )
+                    person = cur.fetchall()
+                    cur.execute('SELECT * FROM Adres WHERE id=?', (str(person[0][3])) )
+                    adress = cur.fetchall()
+                    if(len(person) == 0):
+                        if(len(adress) == 0):
+                            cur.execute('DELETE FROM Uzytkownik WHERE id=?', (str(user[0])) )
+                            con.commit()
+                            flash('Usunieto osobe')
+                        else:
+                            flash('Musisz najpierw usunac adres', 'error')
                     else:
-                        flash('Musisz najpierw usunac adres', 'error')
-                else:
-                    flash('Musisz najpierw usunac osobe', 'error')
-            
-            if "Update Uzytkownika" == request.form.get("submitUpdate"):         
-                cur = get_db().cursor()
-                session["id"] = (request.form.getlist("przycisk"))
-                print(session["id"])
-                return redirect(url_for("update_user"))
-
+                        flash('Musisz najpierw usunac osobe', 'error')
+                except:
+                    flash('Musisz najpierw wybrac osobe')
+            if "Update Uzytkownika" == request.form.get("submitUpdate"):        
+                try: 
+                    request.form.getlist("przycisk")[0]
+                    cur = get_db().cursor()
+                    session["id"] = (request.form.getlist("przycisk"))
+                    print(session["id"])
+                    return redirect(url_for("update_user"))
+                except:
+                    flash('Musisz najpierw wybrac osobe')
         cur = get_db().cursor()
         cur.execute("Select Osoba.id, imie, nazwisko, login, typ, nr_lokalu, nr_budynku, ulica, miasto, wojewodztwo from Osoba inner join Uzytkownik on Osoba.id = Uzytkownik.id inner join Adres on Adres.id = Osoba.id" )
         return render_template(
@@ -173,16 +179,18 @@ def update_user():
         if request.method == "POST":
             cur = get_db().cursor()
             if "Update Uzytkownika" == request.form.get("submit"):
-                con = get_db()
-                cur = get_db().cursor()
-                ids = str(session['id'][0])
-                con.execute('update Uzytkownik set login=? where id=?',( form.username.data , ids ) )
-                if(len(form.password.data) != 0):
-                    con.execute('update Uzytkownik set haslo=? where id=?',(form.password.data, ids) )
-                con.execute('update Uzytkownik set typ=? where id=?',(form.typ.data, ids) )
-                con.commit()
-                return redirect(url_for("index"))
-                
+                if form.validate():
+                    con = get_db()
+                    cur = get_db().cursor()
+                    ids = str(session['id'][0])
+                    con.execute('update Uzytkownik set login=? where id=?',( form.username.data , ids ) )
+                    if(len(form.password.data) != 0):
+                        con.execute('update Uzytkownik set haslo=? where id=?',(form.password.data, ids) )
+                    con.execute('update Uzytkownik set typ=? where id=?',(form.typ.data, ids) )
+                    con.commit()
+                    return redirect(url_for("index"))
+                else:
+                    flash('Wszystkie pola musza zostać wypełnione')
         cur = get_db().cursor()
         cur.execute("Select id, login, haslo, typ from Uzytkownik where id=?",(session["id"]))
         produkty = cur.fetchall()
@@ -208,23 +216,29 @@ def del_osoba():
             cur = get_db().cursor()
 
             if "Usuń Osobe" == request.form.get("submit"):
-                cur.execute('SELECT * FROM Osoba WHERE id=?', (request.form.getlist("przycisk")[0]) )
-                person = cur.fetchall()
-                cur.execute('SELECT * FROM Adres WHERE id=?', (str(person[0][3])) )
-                adress = cur.fetchall()
-                if(len(adress) == 0):
-                    cur.execute('DELETE FROM Osoba WHERE id=?', (request.form.getlist("przycisk")[0]) )
-                    con.commit()
-                    flash('Usunieto osobe')
-                else:
-                    flash('Musisz najpierw usunac adres', 'error')
-
-            if "Update Osobe" == request.form.get("submitUpdate"):         
-                cur = get_db().cursor()
-                session["id"] = (request.form.getlist("przycisk"))
-                print(session["id"])
-                return redirect(url_for("update_osoba"))
-
+                try :
+                    request.form.getlist("przycisk")[0]
+                    cur.execute('SELECT * FROM Osoba WHERE id=?', (request.form.getlist("przycisk")[0]) )
+                    person = cur.fetchall()
+                    cur.execute('SELECT * FROM Adres WHERE id=?', (str(person[0][3])) )
+                    adress = cur.fetchall()
+                    if(len(adress) == 0):
+                        cur.execute('DELETE FROM Osoba WHERE id=?', (request.form.getlist("przycisk")[0]) )
+                        con.commit()
+                        flash('Usunieto osobe')
+                    else:
+                        flash('Musisz najpierw usunac adres', 'error')
+                except:
+                        flash('Musisz najpierw wybrac pole', 'error')
+            if "Update Osobe" == request.form.get("submitUpdate"):    
+                try :
+                    request.form.getlist("przycisk")[0]     
+                    cur = get_db().cursor()
+                    session["id"] = (request.form.getlist("przycisk"))
+                    print(session["id"])
+                    return redirect(url_for("update_osoba"))
+                except:
+                        flash('Musisz najpierw wybrac pole', 'error')
 
         cur = get_db().cursor()
         cur.execute("Select Osoba.id, imie, nazwisko, login, typ, nr_lokalu, nr_budynku, ulica, miasto, wojewodztwo from Osoba inner join Uzytkownik on Osoba.id = Uzytkownik.id inner join Adres on Adres.id = Osoba.id" )
@@ -244,11 +258,13 @@ def update_osoba():
                 con = get_db()
                 cur = get_db().cursor()
                 ids = str(session['id'][0])
-                con.execute('update Osoba set imie=? where id=?',( form.name.data , ids ) )
-                con.execute('update Osoba set nazwisko=? where id=?',(form.last_name.data, ids) )
-                con.commit()
-                return redirect(url_for("index"))
-
+                if form.validate():
+                    con.execute('update Osoba set imie=? where id=?',( form.name.data , ids ) )
+                    con.execute('update Osoba set nazwisko=? where id=?',(form.last_name.data, ids) )
+                    con.commit()
+                    return redirect(url_for("index"))
+                else:
+                    flash("Wszystkie pola musza zostać wypełnione")
         cur = get_db().cursor()
         cur.execute("Select id, imie, nazwisko from Osoba where id=?",(session["id"]))
         produkty = cur.fetchall()
@@ -273,20 +289,31 @@ def del_adres():
             cur = get_db().cursor()
 
             if "Usuń Adres" == request.form.get("submit"):
-                cur.execute('SELECT * FROM Adres WHERE id=?', (request.form.getlist("przycisk")[0]) )
-                adress = cur.fetchall()
-                if(len(adress) == 1):
-                    cur.execute('DELETE FROM Adres WHERE id=?', (request.form.getlist("przycisk")[0]) )
-                    con.commit()
-                    flash('Usunieto Adres')
-                else:
-                    flash('Nieznany blad', 'error')
+                
+                try :
+                    request.form.getlist("przycisk")[0]
+                    cur.execute('SELECT * FROM Adres WHERE id=?', (request.form.getlist("przycisk")[0]) )
+                    adress = cur.fetchall()
+                    if(len(adress) == 1):
+                        cur.execute('DELETE FROM Adres WHERE id=?', (request.form.getlist("przycisk")[0]) )
+                        con.commit()
+                        flash('Usunieto Adres')
+                    else:
+                        flash('Nieznany blad', 'error')
+                except:
+                    flash("Musisz wybrac Adres z listy")
+                    
+
+                
 
             if "Update Adres" == request.form.get("submitUpdate"):
-                cur = get_db().cursor()
-                session["id"] = (request.form.getlist("przycisk"))
-                return redirect(url_for("update_adres"))
-
+                try :
+                    request.form.getlist("przycisk")[0]
+                    cur = get_db().cursor()
+                    session["id"] = (request.form.getlist("przycisk"))
+                    return redirect(url_for("update_adres"))
+                except:
+                    flash("Musisz wybrac Adres z listy")
         cur = get_db().cursor()
         cur.execute("Select id, nr_lokalu, nr_budynku, ulica, miasto, wojewodztwo from Adres")
         return render_template(
@@ -306,13 +333,17 @@ def update_adres():
                 con = get_db()
                 cur = get_db().cursor()
                 ids = str(session['id'][0])
-                con.execute('update Adres set nr_lokalu=? where id=?',( form.building_number.data , ids ) )
-                con.execute('update Adres set nr_budynku=? where id=?',(form.house_number.data, ids) )
-                con.execute('update Adres set ulica=? where id=?',(form.street.data, ids ) )
-                con.execute('update Adres set miasto=? where id=?',(form.city.data, ids ) )
-                con.execute('update Adres set wojewodztwo=? where id=?',(form.voivodeship.data, ids ) )
-                con.commit()
-                return redirect(url_for("index"))
+                if(form.validate()):
+                    con.execute('update Adres set nr_lokalu=? where id=?',( form.building_number.data , ids ) )
+                    con.execute('update Adres set nr_budynku=? where id=?',(form.house_number.data, ids) )
+                    con.execute('update Adres set ulica=? where id=?',(form.street.data, ids ) )
+                    con.execute('update Adres set miasto=? where id=?',(form.city.data, ids ) )
+                    con.execute('update Adres set wojewodztwo=? where id=?',(form.voivodeship.data, ids ) )
+                    con.commit()    
+                    return redirect(url_for("index"))
+                else:
+                    flash('Wyszystkie dane musza zostac wprowadzone')
+                    print('Wyszystkie dane musza zostac wprowadzone')
 
         cur = get_db().cursor()
         cur.execute("Select * from Adres where id=?",(session["id"]))
@@ -339,20 +370,25 @@ def del_produkt():
             cur = get_db().cursor()
 
             if "Usuń Produkt" == request.form.get("submit"):
-                cur.execute('SELECT * FROM Produkt WHERE id=?', (request.form.getlist("przycisk")[0]) )
-                produkt = cur.fetchall()
-                if(len(produkt) == 1):
-                    cur.execute('DELETE FROM Produkt WHERE id=?', (request.form.getlist("przycisk")[0]) )
-                    con.commit()
-                    flash('Usunieto Produkt')
-                else:
-                    flash('Nieznany blad', 'error')
-
+                try:
+                    cur.execute('SELECT * FROM Produkt WHERE id=?', (request.form.getlist("przycisk")[0]) )
+                    produkt = cur.fetchall()
+                    if(len(produkt) == 1):
+                        cur.execute('DELETE FROM Produkt WHERE id=?', (request.form.getlist("przycisk")[0]) )
+                        con.commit()
+                        flash('Usunieto Produkt')
+                    else:
+                        flash('Nieznany blad', 'error')
+                except:
+                    flash('Musisz wybrać produkt', 'error')
             if "Update Produkt" == request.form.get("submitUpdate"):
-                cur = get_db().cursor()
-                session["id"] = (request.form.getlist("przycisk"))
-                return redirect(url_for("update_product"))
-
+                try:    
+                    request.form.getlist("przycisk")[0]
+                    cur = get_db().cursor()
+                    session["id"] = (request.form.getlist("przycisk"))
+                    return redirect(url_for("update_product"))
+                except:
+                    flash('Musisz wybrać produkt', 'error')
         cur = get_db().cursor()
         cur.execute("Select id, nazwa, cena_netto, vat, opiekun from Produkt")
         return render_template(
@@ -373,12 +409,14 @@ def update_product():
                 con = get_db()
                 cur = get_db().cursor()
                 ids = str(session['id'][0])
-                con.execute('update Produkt set nazwa=? where id=?',( form.name.data , ids ) )
-                con.execute('update Produkt set cena_netto=? where id=?',(form.net_price.data, ids) )
-                con.execute('update Produkt set vat=? where id=?',(form.vat.data, ids ) )
-                con.commit()
-                return redirect(url_for("index"))
-
+                if form.validate():
+                    con.execute('update Produkt set nazwa=? where id=?',( form.name.data , ids ) )
+                    con.execute('update Produkt set cena_netto=? where id=?',(form.net_price.data, ids) )
+                    con.execute('update Produkt set vat=? where id=?',(form.vat.data, ids ) )
+                    con.commit()
+                    return redirect(url_for("index"))
+                else:
+                    flash('Wszystkie pola musza być wypełnione')
         cur = get_db().cursor()
         cur.execute("Select id, nazwa, cena_netto, vat, opiekun from Produkt where id=?",(session["id"]))
         produkty = cur.fetchall()
