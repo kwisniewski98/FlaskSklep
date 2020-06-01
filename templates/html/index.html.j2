@@ -1,11 +1,13 @@
 {% extends "html/base.html.j2" %}
 {% block content %}
-<a href="/client/products"> Produkty</a></br>
+<input type="button" onclick="window.location.href='/client/products'" value="Produkty"/></br>
 {% if user_type == "Sprzedawca" or user_type == "Manager" %}
-<a href="/seller/add_product"> Dodaj Produkt</a></br>
+<input type="button" onclick="window.location.href='/seller/add_product'" value="Dodaj Produkt"/>
+</br>
 {% endif %}
 {% if user_type == "Manager" %}
-<a href="/manager/users"> Wyświetl użytkowników</a></br>
+<input type="button" onclick="window.location.href='/manager/users'" value="Wyświetl użytkowników"/>
+</br>
     <form action="" method="post" name="sellerregister" novalidate >
         <input type="submit" value="Zarejestruj Sprzedawce" name="submit">
     </form>

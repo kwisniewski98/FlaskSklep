@@ -553,6 +553,15 @@ def index():
         text-decoration: underline;
         cursor: pointer;
     }
+    input[type="button"]{
+    
+        background: none;
+        border: none;
+        color: blue;
+        text-decoration: underline;
+        cursor: pointer;
+        padding-bottom: 10px;
+    }
     </style>"""
         return render_template(
             "html/index.html.j2",
